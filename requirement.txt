@@ -1,0 +1,15 @@
+
+pandas
+numpy
+matplotlib
+datetime
+
+seaborn
+
+sklearn
+pymc
+statsmodel
+arviz
+
+streamlit
+pickle
