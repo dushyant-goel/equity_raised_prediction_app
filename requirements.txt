@@ -2,14 +2,10 @@
 pandas
 numpy
 matplotlib
-datetime
-
 seaborn
-
-sklearn
+scikit-learn
 pymc
-statsmodel
+statsmodels
 arviz
-
 streamlit
 pickle
