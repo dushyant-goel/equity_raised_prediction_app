@@ -21,9 +21,9 @@ This app predicts the amount raised by startups based on
 # ---- Slider for User Input ----
 
 # Input for Numerical Features
-monthly_revenue = st.slider("Monthly Revenue (£)", min_value=1_000, max_value=150_000, value=65_000, step=1_000)
-pre_valuation = st.slider("Pre-Money Valuation (£)", min_value=100_000, max_value=7_000_000, value=1_000_000, step=50_000)
-target_raise = st.slider("Target Raise (£)", min_value=50_000, max_value=7_000_000, value=750_000, step=10_000)
+monthly_revenue = st.slider("Monthly Revenue (£)", min_value=1_000, max_value=150_000, value=25_000, step=1_000)
+pre_valuation = st.slider("Pre-Money Valuation (£)", min_value=100_000, max_value=7_000_000, value=2_000_000, step=50_000)
+target_raise = st.slider("Target Raise (£)", min_value=50_000, max_value=7_000_000, value=1_600_000, step=10_000)
 
 # ---- Checklist for document flags ----
 
