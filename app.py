@@ -116,7 +116,7 @@ st.subheader("Predicted Amount Raised")
 st.write(f"Predicted Amount Raised: £{pred_mean:,.2f}")
 
 st.markdown(f"""
-- 95% Confidence Interval: **£{pred_low:.2f} - £{pred_high:.2f}**
+- 95% Confidence Interval: **£{pred_low:,.2f} - £{pred_high:,.2f}**
 - Based on your inputs:
     - Monthly Revenue: £{monthly_revenue:,}
     - Target Raise: £{target_raise:,}
@@ -128,9 +128,9 @@ st.subheader("Impact of Selected Documents")
 boost = pred_boosted_mean - pred_mean
 
 if boost > 0:
-    st.success(f"📈 **Boost:** +£{boost:,.0f} (~{(boost / pred_mean) * 100:.1f}%)")
+    st.success(f"📈 **Boost:** +£{boost:,.0f} (~{(boost / pred_mean) * 100:,.1f}%)")
     st.write(f"Predicted Amount Raised with Selected Documents: £{pred_boosted_mean:,.2f}")
-    st.markdown(f"95% Confidence Interval with Selected Documents: **£{pred_boosted_low:.2f} - £{pred_boosted_high:,.2f}**")
+    st.markdown(f"95% Confidence Interval with Selected Documents: **£{pred_boosted_low:,.2f} - £{pred_boosted_high:,.2f}**")
 else:
     st.info("No boost (or no documents selected).")
 
