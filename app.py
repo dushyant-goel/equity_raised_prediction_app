@@ -8,14 +8,13 @@ from sklearn.linear_model import Ridge
 
 import pickle
 
-st.set_page_config(page_title="Startup Fundraising Analysis", layout="centered")
+st.set_page_config(page_title="Startup Fundraising Decision Aiding Tool", layout="centered")
 
 # ---- Title ----
 st.title("Predicting Startup Amount Raised")
 st.markdown("""
-This app predicts the amount raised by startups based on 
-            factors such as documentation valuation, monthly revenue, target raised
-            location, and more
+This app predicts the amount raised by startups based on a mixed predictors
+such as documentation completion, valuation, monthly revenue and target raised            
 """)
 
 # ---- Slider for User Input ----
@@ -65,12 +64,12 @@ for i, col in enumerate(bool_columns):
 
 # ---- Load the Trained Model Weights ----
 
-with open("trained_bayes_model.pkl", "rb") as f:
+with open("ridge_model.pkl", "rb") as f:
     model_params = pickle.load(f)
 
-beta = model_params['beta']           
-intercept = model_params['intercept']    
-sigma = model_params['sigma']
+beta = model_params['coefficients'][1:]           
+intercept = model_params['intercept']
+sigma = model_params['sigma']    
 
 # --- Prediction Results ---
 
@@ -80,36 +79,47 @@ x = pd.DataFrame({
     'preMoneyValuation': [np.log10(pre_valuation)]
 })
 
-for col in bool_columns:
-    if col not in x.columns:
-        x[col] = 0
-
-# Document Boost Features
-
-x_boosted = pd.DataFrame()
-x_boosted = x.copy()
-
-for col in selected_docs:
-    x_boosted[col] = 1
-
 # Base Prediction with 95% confidence interval based on sigma
-y_pred_mean = intercept + np.dot(x, beta)
-y_pred_low = y_pred_mean - 1.96 * sigma
-y_pred_high = y_pred_mean + 1.96 * sigma
+y_pred = intercept + np.dot(x, beta)
 
-# Document Boosted Prediction with 95% confidence interval based on sigma
-y_pred_boosted_mean = intercept + np.dot(x_boosted, beta)
-y_pred_boosted_low = y_pred_boosted_mean - 1.96 * sigma
-y_pred_boosted_high = y_pred_boosted_mean + 1.96 * sigma
+y_pred_low = y_pred - 1.96 * sigma
+y_pred_high = y_pred + 1.96 * sigma
 
 # Convert to original scale
-pred_mean = 10 ** y_pred_mean[0]
-pred_low = 10 ** y_pred_low[0]
-pred_high = 10 ** y_pred_high[0]
+pred_mean = np.power(y_pred[0], 10)
+pred_low = np.power(y_pred_low[0], 10)
+pred_high = np.power(y_pred_high[0], 10)
 
-pred_boosted_mean = 10 ** y_pred_boosted_mean[0]
-pred_boosted_low = 10 ** y_pred_boosted_low[0]
-pred_boosted_high = 10 ** y_pred_boosted_high[0]
+
+### Document Boost Features ###
+document_row = []
+
+# NOTE: currently this is dependent on order of fields
+# being same across files. Can be improved.
+for col in bool_columns:
+    if col in selected_docs:
+        document_row.append(1)
+    else:    
+        document_row.append(0)
+
+# Load the trained decision tree #
+with open("decision_tree.pkl", "rb") as f:
+    tree = pickle.load(f)
+
+def predict_row(row, tree):
+    
+    # Leaf node
+    if 'prediction' in tree:
+        return tree['prediction']
+    
+    if row[tree['feature']] == 1:
+        return predict_row(row, tree['right'])
+    else:
+        return predict_row(row, tree['left'])
+
+
+# Document Boost Prediction 
+pred_boost = predict_row(document_row ,tree)
 
 # ---- Display Results ----
 st.subheader("Predicted Amount Raised")
@@ -125,12 +135,11 @@ st.markdown(f"""
 
 st.subheader("Impact of Selected Documents")
 
-boost = pred_boosted_mean - pred_mean
 
-if boost > 0:
-    st.success(f"📈 **Boost:** +£{boost:,.0f} (~{(boost / pred_mean) * 100:.1f}%)")
-    st.write(f"Predicted Amount Raised with Selected Documents: £{pred_boosted_mean:,.2f}")
-    st.markdown(f"95% Confidence Interval with Selected Documents: **£{pred_boosted_low:.2f} - £{pred_boosted_high:,.2f}**")
+if pred_boost > 0:
+    st.success(f"📈 **Boost:** ~({(pred_boost) * 100:.2f}%)")
+    st.write(f"Predicted Amount Raised with Selected Documents: £{pred_mean * pred_boost:,.2f}")
+    st.markdown(f"95% Confidence Interval with Selected Documents: **£{pred_low * pred_boost:.2f} - £{pred_high * pred_boost:,.2f}**")
 else:
     st.info("No boost (or no documents selected).")
 
